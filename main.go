@@ -1,11 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"image"
-	"image/color"
 	"image/png"
+	"math"
 	"os"
 )
+
+var ALPHABET = map[string]string{
+	"A": "./alphabet/A_50x75.png",
+	"B": "./alphabet/B_50x75.png",
+}
 
 func SaveImage(img image.Image, filePath string) error {
 	newFile, err := os.Create(filePath)
@@ -29,21 +35,6 @@ func OpenImageFile(filename string) image.Image {
 	}
 
 	return img
-}
-
-func AddColor(colors *[]color.Color, newColor color.Color) *[]color.Color {
-
-	for i := 0; i < len(*colors); i++ {
-		dstr, dstg, dstb, dsta := newColor.RGBA()
-		sstr, sstg, sstb, ssta := (*colors)[i].RGBA()
-
-		if dstr == sstr && dstg == sstg && dstb == sstb && dsta == ssta {
-			return colors
-		}
-	}
-
-	*colors = append(*colors, newColor)
-	return colors
 }
 
 func GetImageBounds(img image.Image) (image.Point, image.Point) {
@@ -74,6 +65,29 @@ func GetImageBounds(img image.Image) (image.Point, image.Point) {
 	}
 
 	return image.Point{X: minX, Y: minY}, image.Point{X: maxX, Y: maxY}
+}
+
+// Very simply Eucledean distance where it encodes black and white as 0 or 1
+func EuclideanDistance(baseImage image.Image, compareImage image.Image) float64 {
+
+	maxPoint := baseImage.Bounds().Max
+
+	var sum float64
+
+	p := float64(2)
+
+	for x := 1; x < maxPoint.X; x++ {
+		for y := 1; y < maxPoint.Y; y++ {
+
+			baseR, baseG, baseB, baseA := baseImage.At(x, y).RGBA()
+			compareR, compareG, compareB, compareA := compareImage.At(x, y).RGBA()
+
+			sum += math.Pow(float64(baseR-compareR), p) + math.Pow(float64(baseG-compareG), p) +
+				math.Pow(float64(baseB-compareB), p) + math.Pow(float64(baseA-compareA), p)
+
+		}
+	}
+	return math.Sqrt(sum)
 }
 
 func CropImage(baseImage image.Image, minPoint image.Point, maxPoint image.Point) image.Image {
@@ -128,12 +142,13 @@ func ResizeImage(baseImage image.Image, width int, height int) image.Image {
 	}
 
 	return newImage
-
 }
 
 func main() {
-	img := OpenImageFile("./images/A.png")
-	alphabetImage := OpenImageFile("./alphabet/A.png")
+
+	img := OpenImageFile("./images/B.png")
+
+	alphabetImage := OpenImageFile("./alphabet/B_50x75.png")
 
 	minPoint, maxPoint := GetImageBounds(img)
 
@@ -144,5 +159,9 @@ func main() {
 		alphabetImage.Bounds().Max.X,
 		alphabetImage.Bounds().Max.Y)
 
-	SaveImage(resizedImage, "/tmp/A.resized.png")
+	for letter, filename := range ALPHABET {
+		compareImage := OpenImageFile(filename)
+		fmt.Printf("%s :  %f \n", letter, EuclideanDistance(resizedImage, compareImage))
+	}
+
 }
