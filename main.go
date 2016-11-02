@@ -11,6 +11,29 @@ import (
 var ALPHABET = map[string]string{
 	"A": "./alphabet/A_50x75.png",
 	"B": "./alphabet/B_50x75.png",
+	"C": "./alphabet/C_50x75.png",
+	"D": "./alphabet/D_50x75.png",
+	"E": "./alphabet/E_50x75.png",
+	"F": "./alphabet/F_50x75.png",
+	"G": "./alphabet/G_50x75.png",
+	"H": "./alphabet/H_50x75.png",
+	//"I": "./alphabet/I_50x75.png",
+	"J": "./alphabet/J_50x75.png",
+	"K": "./alphabet/K_50x75.png",
+	"L": "./alphabet/L_50x75.png",
+	"M": "./alphabet/M_50x75.png",
+	"N": "./alphabet/N_50x75.png",
+	"O": "./alphabet/O_50x75.png",
+	"P": "./alphabet/P_50x75.png",
+	"Q": "./alphabet/Q_50x75.png",
+	"R": "./alphabet/R_50x75.png",
+	"S": "./alphabet/S_50x75.png",
+	"T": "./alphabet/T_50x75.png",
+	"U": "./alphabet/U_50x75.png",
+	"V": "./alphabet/V_50x75.png",
+	"X": "./alphabet/X_50x75.png",
+	"Y": "./alphabet/Y_50x75.png",
+	"Z": "./alphabet/Z_50x75.png",
 }
 
 func SaveImage(img image.Image, filePath string) error {
@@ -146,22 +169,29 @@ func ResizeImage(baseImage image.Image, width int, height int) image.Image {
 
 func main() {
 
-	img := OpenImageFile("./images/B.png")
-
-	alphabetImage := OpenImageFile("./alphabet/B_50x75.png")
+	img := OpenImageFile("./images/letter.png")
 
 	minPoint, maxPoint := GetImageBounds(img)
-
 	croppedImage := CropImage(img, minPoint, maxPoint)
 
-	resizedImage := ResizeImage(
-		croppedImage,
-		alphabetImage.Bounds().Max.X,
-		alphabetImage.Bounds().Max.Y)
+	resizedImage := ResizeImage(croppedImage, 10, 15)
+
+	SaveImage(resizedImage, "/tmp/letter.50x75.png")
+
+	var lowerDistance = float64(0)
+	var rightLetter string = ""
 
 	for letter, filename := range ALPHABET {
-		compareImage := OpenImageFile(filename)
+		compareImage := ResizeImage(OpenImageFile(filename), 10, 15)
+		distance := EuclideanDistance(resizedImage, compareImage)
+
+		if lowerDistance == float64(0) || distance < lowerDistance {
+			lowerDistance = distance
+			rightLetter = letter
+		}
 		fmt.Printf("%s :  %f \n", letter, EuclideanDistance(resizedImage, compareImage))
 	}
+
+	fmt.Println(fmt.Sprintf(">>>>>>>> %s : %f", rightLetter, lowerDistance))
 
 }
